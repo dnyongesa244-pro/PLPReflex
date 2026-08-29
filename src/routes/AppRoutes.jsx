@@ -4,17 +4,39 @@ import Login from '../pages/auth/Login'
 import RetailerDashboard from '../pages/retailer/RetailerDashboard'
 import DispatcherDashboard from '../pages/dispatcher/DispatcherDashboard'
 import RiderDashboard from '../pages/rider/RiderDashboard'
+import ProtectedRoute from './ProtectedRoute'
 
 function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
 
-      <Route path="/retailer" element={<RetailerDashboard />} />
+      <Route
+        path="/retailer"
+        element={
+          <ProtectedRoute allowedRoles={['retailer']}>
+            <RetailerDashboard />
+          </ProtectedRoute>
+        }
+      />
 
-      <Route path="/dispatcher" element={<DispatcherDashboard />} />
+      <Route
+        path="/dispatcher"
+        element={
+          <ProtectedRoute allowedRoles={['dispatcher']}>
+            <DispatcherDashboard />
+          </ProtectedRoute>
+        }
+      />
 
-      <Route path="/rider" element={<RiderDashboard />} />
+      <Route
+        path="/rider"
+        element={
+          <ProtectedRoute allowedRoles={['rider']}>
+            <RiderDashboard />
+          </ProtectedRoute>
+        }
+      />
 
       <Route path="/" element={<Navigate to="/login" replace />} />
 
