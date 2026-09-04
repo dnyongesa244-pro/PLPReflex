@@ -32,6 +32,31 @@ export const createDelivery = async (deliveryData) => {
     })
 }
 
+export const getPendingDeliveries = async () => {
+    return request('/deliveries/pending')
+}
+
+export const assignRider = async (deliveryId, riderId) => {
+    return request(`/deliveries/${deliveryId}/assign`, {
+        method: 'PATCH',
+        body: JSON.stringify({ riderId }),
+    })
+}
+
+export const updateDeliveryStatus = async (deliveryId, status) => {
+    return request(`/deliveries/${deliveryId}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status }),
+    })
+}
+
+export const confirmDelivery = async (deliveryId, confirmationCode) => {
+    return request(`/deliveries/${deliveryId}/confirm`, {
+        method: 'POST',
+        body: JSON.stringify({ confirmationCode }),
+    })
+}
+
 export const getMyDeliveries = async () => {
     return request('/deliveries/my-deliveries')
 }
