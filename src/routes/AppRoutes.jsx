@@ -14,7 +14,7 @@ function AppRoutes() {
       <Route
         path="/retailer"
         element={
-          <ProtectedRoute allowedRoles={['retailer']}>
+          <ProtectedRoute allowedRoles={['RETAILER']}>
             <RetailerDashboard />
           </ProtectedRoute>
         }
@@ -23,7 +23,7 @@ function AppRoutes() {
       <Route
         path="/dispatcher"
         element={
-          <ProtectedRoute allowedRoles={['dispatcher']}>
+          <ProtectedRoute allowedRoles={['DISPATCHER']}>
             <DispatcherDashboard />
           </ProtectedRoute>
         }
@@ -32,7 +32,7 @@ function AppRoutes() {
       <Route
         path="/rider"
         element={
-          <ProtectedRoute allowedRoles={['rider']}>
+          <ProtectedRoute allowedRoles={['RIDER']}>
             <RiderDashboard />
           </ProtectedRoute>
         }

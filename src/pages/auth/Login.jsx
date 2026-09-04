@@ -1,106 +1,138 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
 
 function Login() {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  })
+    const [formData, setFormData] = useState({
+        email: '',
+        password: '',
+    })
 
-  const handleChange = (event) => {
-    const { name, value } = event.target
+    const [error, setError] = useState('')
+    const [loading, setLoading] = useState(false)
 
-    setFormData((current) => ({
-      ...current,
-      [name]: value,
-    }))
-  }
+    const { login } = useAuth()
+    const navigate = useNavigate()
 
-  const handleSubmit = (event) => {
-    event.preventDefault()
+    const handleChange = (event) => {
+        const { name, value } = event.target
 
-    console.log('Login form submitted:', formData)
-  }
+        setFormData((current) => ({
+            ...current,
+            [name]: value,
+        }))
+    }
 
-  return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
-      <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-            Reflex
-          </h1>
+    const handleSubmit = async (event) => {
+        event.preventDefault()
 
-          <p className="mt-2 text-sm text-slate-600">
-            Delivery management made visible
-          </p>
-        </div>
+        setError('')
+        setLoading(true)
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold text-slate-900">
-              Sign in
-            </h2>
+        try {
+            const data = await login(formData)
 
-            <p className="mt-1 text-sm text-slate-500">
-              Sign in to manage your deliveries.
-            </p>
-          </div>
+            if (data.user.role === 'RETAILER') {
+                navigate('/retailer')
+            } else if (data.user.role === 'DISPATCHER') {
+                navigate('/dispatcher')
+            } else if (data.user.role === 'RIDER') {
+                navigate('/rider')
+            }
+        } catch (error) {
+            setError(error.message)
+        } finally {
+            setLoading(false)
+        }
+    }
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label
-                htmlFor="email"
-                className="mb-2 block text-sm font-medium text-slate-700"
-              >
-                Email address
-              </label>
+    return (
+        <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
+            <div className="w-full max-w-md">
+                <div className="mb-8 text-center">
+                    <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+                        Reflex
+                    </h1>
 
-              <input
-                id="email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="you@example.com"
-                required
-                className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10"
-              />
+                    <p className="mt-2 text-sm text-slate-600">
+                        Delivery management made visible
+                    </p>
+                </div>
+
+                <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+                    <div className="mb-6">
+                        <h2 className="text-xl font-semibold text-slate-900">
+                            Sign in
+                        </h2>
+
+                        <p className="mt-1 text-sm text-slate-500">
+                            Sign in to manage your deliveries.
+                        </p>
+                    </div>
+
+                    {error && (
+                        <div className="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                            {error}
+                        </div>
+                    )}
+
+                    <form onSubmit={handleSubmit} className="space-y-5">
+                        <div>
+                            <label
+                                htmlFor="email"
+                                className="mb-2 block text-sm font-medium text-slate-700"
+                            >
+                                Email address
+                            </label>
+
+                            <input
+                                id="email"
+                                name="email"
+                                type="email"
+                                value={formData.email}
+                                onChange={handleChange}
+                                placeholder="you@example.com"
+                                required
+                                className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10"
+                            />
+                        </div>
+
+                        <div>
+                            <label
+                                htmlFor="password"
+                                className="mb-2 block text-sm font-medium text-slate-700"
+                            >
+                                Password
+                            </label>
+
+                            <input
+                                id="password"
+                                name="password"
+                                type="password"
+                                value={formData.password}
+                                onChange={handleChange}
+                                placeholder="Enter your password"
+                                required
+                                className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10"
+                            />
+                        </div>
+
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                            {loading ? 'Signing in...' : 'Sign in'}
+                        </button>
+                    </form>
+                </div>
+
+                <p className="mt-6 text-center text-xs text-slate-500">
+                    Reflex Delivery Management System
+                </p>
             </div>
-
-            <div>
-              <label
-                htmlFor="password"
-                className="mb-2 block text-sm font-medium text-slate-700"
-              >
-                Password
-              </label>
-
-              <input
-                id="password"
-                name="password"
-                type="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="Enter your password"
-                required
-                className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-900/10"
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="w-full rounded-lg bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
-            >
-              Sign in
-            </button>
-          </form>
-        </div>
-
-        <p className="mt-6 text-center text-xs text-slate-500">
-          Reflex Delivery Management System
-        </p>
-      </div>
-    </main>
-  )
+        </main>
+    )
 }
 
 export default Login
