@@ -1,8 +1,6 @@
-const API_URL = 'http://localhost:5000/api'
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
-const getToken = () => {
-    return localStorage.getItem('reflex_token')
-}
+const getToken = () => localStorage.getItem('reflex_token')
 
 const request = async (endpoint, options = {}) => {
     const token = getToken()
@@ -32,8 +30,20 @@ export const createDelivery = async (deliveryData) => {
     })
 }
 
+export const getRetailerDeliveries = async () => {
+    return request('/deliveries/mine')
+}
+
 export const getPendingDeliveries = async () => {
     return request('/deliveries/pending')
+}
+
+export const getAssignedDeliveries = async () => {
+    return request('/deliveries/assigned')
+}
+
+export const getRiders = async () => {
+    return request('/riders')
 }
 
 export const assignRider = async (deliveryId, riderId) => {
