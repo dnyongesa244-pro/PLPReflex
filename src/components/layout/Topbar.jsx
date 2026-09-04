@@ -1,23 +1,15 @@
-function Topbar({ role }) {
-  const roleName = role
-    ? role.charAt(0).toUpperCase() + role.slice(1)
-    : 'User'
+import ProfileMenu from './ProfileMenu'
+
+function Topbar() {
 
   return (
-    <header className="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-6">
+    <header className="flex min-h-16 flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-white px-4 py-3 sm:px-6">
       <div>
         <h1 className="text-lg font-semibold text-slate-900">Dashboard</h1>
       </div>
 
-      <div className="flex items-center gap-3">
-        <div className="text-right">
-          <p className="text-sm font-medium text-slate-900">Demo User</p>
-          <p className="text-xs text-slate-500">{roleName}</p>
-        </div>
-
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-200 text-sm font-semibold text-slate-700">
-          DU
-        </div>
+      <div className="hidden md:block">
+        <ProfileMenu />
       </div>
     </header>
   )
