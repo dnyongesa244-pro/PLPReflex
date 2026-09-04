@@ -5,7 +5,12 @@ import {
   updateDeliveryStatus,
   confirmDelivery,
 } from '../../services/deliveryService'
-
+import {
+  connectSocket,
+  disconnectSocket,
+  onDeliveryUpdated,
+  offDeliveryUpdated,
+} from '../../services/socketService'
 function RiderDashboard() {
   const [deliveries, setDeliveries] = useState([])
   const [loading, setLoading] = useState(true)
@@ -28,6 +33,26 @@ function RiderDashboard() {
     }
 
     loadDeliveries()
+  }, [])
+
+  useEffect(() => {
+    const handleDeliveryUpdated = (updatedDelivery) => {
+      setDeliveries((currentDeliveries) =>
+        currentDeliveries.map((delivery) =>
+          delivery.id === updatedDelivery.id
+            ? { ...delivery, ...updatedDelivery }
+            : delivery
+        )
+      )
+    }
+
+    connectSocket()
+    onDeliveryUpdated(handleDeliveryUpdated)
+
+    return () => {
+      offDeliveryUpdated(handleDeliveryUpdated)
+      disconnectSocket()
+    }
   }, [])
 
 
@@ -108,12 +133,12 @@ function RiderDashboard() {
 
         <div className="mt-8 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
           {message && (
-              <div className="mb-5 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-                {message}
-              </div>
-            )}
+            <div className="mb-5 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+              {message}
+            </div>
+          )}
           <div className="flex items-center justify-between">
-            
+
             <div>
               <h3 className="text-lg font-semibold text-slate-900">
                 My Assigned Deliveries
