@@ -1,16 +1,38 @@
-# React + Vite
+# Reflex Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + Vite progressive web app for Reflex delivery management.
 
-Currently, two official plugins are available:
+## Setup
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```bash
+cp .env.example .env
+npm install
+npm run dev
+```
 
-## React Compiler
+App: `http://localhost:5173`
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Environment
 
-## Expanding the ESLint configuration
+```env
+VITE_API_URL=http://localhost:5000/api
+VITE_SOCKET_URL=http://localhost:5000
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+For production, point these at your deployed backend (no trailing slash on socket URL).
+
+## Demo flow
+
+1. Login as `retailer@reflex.com` / `password123` → create a delivery (note the QR code)
+2. Login as `dispatcher@reflex.com` → assign a rider
+3. Login as `rider@reflex.com` → Picked Up → Delivered → enter the QR code to confirm
+
+## Deploy (Vercel)
+
+1. Import the Frontend repo
+2. Set env:
+   - `VITE_API_URL=https://your-backend.onrender.com/api`
+   - `VITE_SOCKET_URL=https://your-backend.onrender.com`
+3. Build command: `npm run build`
+4. Output directory: `dist`
+5. Ensure Backend `CLIENT_ORIGIN` includes your Vercel URL
