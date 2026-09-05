@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import DashboardLayout from '../../layouts/DashboardLayout'
 import {
   getMyDeliveries,
@@ -20,6 +21,8 @@ function RiderDashboard() {
   const [message, setMessage] = useState('')
   const [confirmationCodes, setConfirmationCodes] = useState({})
   const [confirmingId, setConfirmingId] = useState(null)
+  const [searchParams] = useSearchParams()
+  const statusFilter = searchParams.get('status') || 'ALL'
 
   const loadDeliveries = async () => {
     try {
@@ -126,6 +129,33 @@ function RiderDashboard() {
     }
   }
 
+  const filteredDeliveries = deliveries.filter((delivery) => {
+    if (statusFilter === 'ALL') return true
+    if (statusFilter === 'DELIVERED') {
+      return delivery.status === 'DELIVERED' || delivery.confirmed
+    }
+    return delivery.status === statusFilter
+  })
+
+  const statusCopy = {
+    ASSIGNED: {
+      heading: 'Assigned deliveries',
+      empty: 'No deliveries waiting for pickup.',
+    },
+    PICKED_UP: {
+      heading: 'Picked up deliveries',
+      empty: 'Nothing picked up right now.',
+    },
+    DELIVERED: {
+      heading: 'Delivered',
+      empty: 'No delivered deliveries yet.',
+    },
+    ALL: {
+      heading: 'My Assigned Deliveries',
+      empty: 'No deliveries have been assigned to you.',
+    },
+  }
+
   return (
     <DashboardLayout role="rider">
       <div>
@@ -150,16 +180,26 @@ function RiderDashboard() {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h3 className="text-lg font-semibold text-slate-900">
-                My Assigned Deliveries
+                {statusCopy[statusFilter].heading}
               </h3>
               <p className="mt-1 text-sm text-slate-500">
                 Deliveries assigned to you by the dispatcher. Use the retailer
                 QR code to confirm.
               </p>
             </div>
-            <span className="rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-700">
-              {deliveries.length} Deliveries
-            </span>
+            <div className="flex items-center gap-3">
+              {statusFilter !== 'ALL' && (
+                <Link
+                  to="?"
+                  className="text-sm font-medium text-slate-600 underline decoration-slate-300 underline-offset-4 hover:text-slate-900"
+                >
+                  Show all
+                </Link>
+              )}
+              <span className="w-fit rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-700">
+                {filteredDeliveries.length} Deliveries
+              </span>
+            </div>
           </div>
 
           {loading && (
@@ -168,17 +208,17 @@ function RiderDashboard() {
             </p>
           )}
 
-          {!loading && deliveries.length === 0 && (
+          {!loading && filteredDeliveries.length === 0 && (
             <div className="mt-6 rounded-lg bg-slate-50 px-4 py-8 text-center">
               <p className="text-sm text-slate-500">
-                No deliveries have been assigned to you.
+                {statusCopy[statusFilter].empty}
               </p>
             </div>
           )}
 
-          {!loading && deliveries.length > 0 && (
+          {!loading && filteredDeliveries.length > 0 && (
             <div className="mt-6 space-y-4">
-              {deliveries.map((delivery) => (
+              {filteredDeliveries.map((delivery) => (
                 <div
                   key={delivery.id}
                   className="rounded-lg border border-slate-200 p-5"

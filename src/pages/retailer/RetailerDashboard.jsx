@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import DashboardLayout from '../../layouts/DashboardLayout'
 import {
   createDelivery,
@@ -23,6 +24,10 @@ function RetailerDashboard() {
   const [listLoading, setListLoading] = useState(true)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const [searchParams] = useSearchParams()
+  const deliveriesRef = useRef(null)
+
+  const statusFilter = searchParams.get('status') || 'ALL'
 
   const loadDeliveries = async () => {
     try {
@@ -99,13 +104,57 @@ function RetailerDashboard() {
     }
   }
 
-  const pendingCount = deliveries.filter((d) => d.status === 'PENDING').length
+  const matchesStatus = (delivery, status) => {
+    if (status === 'PENDING') return delivery.status === 'PENDING'
+    if (status === 'IN_TRANSIT')
+      return ['ASSIGNED', 'PICKED_UP'].includes(delivery.status)
+    if (status === 'COMPLETED')
+      return delivery.status === 'DELIVERED' || delivery.confirmed
+    return true
+  }
+
+  const pendingCount = deliveries.filter((d) =>
+    matchesStatus(d, 'PENDING')
+  ).length
   const inTransitCount = deliveries.filter((d) =>
-    ['ASSIGNED', 'PICKED_UP'].includes(d.status)
+    matchesStatus(d, 'IN_TRANSIT')
   ).length
-  const completedCount = deliveries.filter(
-    (d) => d.status === 'DELIVERED' || d.confirmed
+  const completedCount = deliveries.filter((d) =>
+    matchesStatus(d, 'COMPLETED')
   ).length
+
+  const filteredDeliveries = deliveries.filter((d) =>
+    matchesStatus(d, statusFilter)
+  )
+
+  const statusCopy = {
+    PENDING: {
+      heading: 'Pending deliveries',
+      empty: 'No pending deliveries right now.',
+    },
+    IN_TRANSIT: {
+      heading: 'In transit deliveries',
+      empty: 'Nothing is currently in transit.',
+    },
+    COMPLETED: {
+      heading: 'Completed deliveries',
+      empty: 'No completed deliveries yet.',
+    },
+    ALL: {
+      heading: 'My Deliveries',
+      empty: 'No deliveries yet. Create your first request above.',
+    },
+  }
+
+  // Jump to the deliveries list whenever a stat-card link changes the filter.
+  useEffect(() => {
+    if (statusFilter !== 'ALL') {
+      deliveriesRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      })
+    }
+  }, [statusFilter])
 
   return (
     <DashboardLayout role="retailer">
@@ -120,14 +169,31 @@ function RetailerDashboard() {
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+          <Link
+            to="?status=PENDING"
+            aria-current={statusFilter === 'PENDING' ? 'true' : undefined}
+            className={`rounded-2xl border bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-6 ${
+              statusFilter === 'PENDING'
+                ? 'border-amber-400 ring-2 ring-amber-400/40'
+                : 'border-slate-200'
+            }`}
+          >
             <p className="text-sm font-medium text-slate-500">Pending</p>
             <p className="mt-2 text-3xl font-bold text-slate-900">
               {pendingCount}
             </p>
             <p className="mt-1 text-sm text-slate-500">Awaiting assignment</p>
-          </div>
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+          </Link>
+
+          <Link
+            to="?status=IN_TRANSIT"
+            aria-current={statusFilter === 'IN_TRANSIT' ? 'true' : undefined}
+            className={`rounded-2xl border bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-6 ${
+              statusFilter === 'IN_TRANSIT'
+                ? 'border-amber-400 ring-2 ring-amber-400/40'
+                : 'border-slate-200'
+            }`}
+          >
             <p className="text-sm font-medium text-slate-500">In Transit</p>
             <p className="mt-2 text-3xl font-bold text-slate-900">
               {inTransitCount}
@@ -135,8 +201,17 @@ function RetailerDashboard() {
             <p className="mt-1 text-sm text-slate-500">
               Currently being delivered
             </p>
-          </div>
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+          </Link>
+
+          <Link
+            to="?status=COMPLETED"
+            aria-current={statusFilter === 'COMPLETED' ? 'true' : undefined}
+            className={`rounded-2xl border bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-6 ${
+              statusFilter === 'COMPLETED'
+                ? 'border-amber-400 ring-2 ring-amber-400/40'
+                : 'border-slate-200'
+            }`}
+          >
             <p className="text-sm font-medium text-slate-500">Completed</p>
             <p className="mt-2 text-3xl font-bold text-slate-900">
               {completedCount}
@@ -144,7 +219,7 @@ function RetailerDashboard() {
             <p className="mt-1 text-sm text-slate-500">
               Successfully delivered
             </p>
-          </div>
+          </Link>
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
@@ -258,64 +333,96 @@ function RetailerDashboard() {
           </form>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h3 className="text-lg font-semibold text-slate-900">
-            My Deliveries
-          </h3>
-          <p className="mt-1 text-sm text-slate-500">
-            Track status and share the confirmation code with the rider.
-          </p>
+        <div
+          ref={deliveriesRef}
+          className="scroll-mt-20 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 className="text-lg font-semibold text-slate-900">
+                {statusCopy[statusFilter].heading}
+              </h3>
+              <p className="mt-1 text-sm text-slate-500">
+                Track status and share the confirmation code with the rider.
+              </p>
+            </div>
+
+            {statusFilter !== 'ALL' && (
+              <Link
+                to="?"
+                className="text-sm font-medium text-slate-600 underline decoration-slate-300 underline-offset-4 hover:text-slate-900"
+              >
+                Show all
+              </Link>
+            )}
+          </div>
 
           {listLoading && (
             <p className="mt-6 text-sm text-slate-500">Loading deliveries...</p>
           )}
 
-          {!listLoading && deliveries.length === 0 && (
+          {!listLoading && filteredDeliveries.length === 0 && (
             <div className="mt-6 rounded-lg bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
-              No deliveries yet. Create your first request above.
+              {statusCopy[statusFilter].empty}
             </div>
           )}
 
-          {!listLoading && deliveries.length > 0 && (
+          {!listLoading && filteredDeliveries.length > 0 && (
             <div className="mt-6 space-y-4">
-              {deliveries.map((delivery) => (
-                <div
-                  key={delivery.id}
-                  className="rounded-lg border border-slate-200 p-5"
-                >
-                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-slate-500">
-                        Delivery #{delivery.id}
+              {filteredDeliveries.map((delivery) => {
+                const badgeStyles = delivery.confirmed
+                  ? 'bg-emerald-100 text-emerald-700'
+                  : delivery.status === 'PENDING'
+                    ? 'bg-slate-100 text-slate-700'
+                    : delivery.status === 'DELIVERED'
+                      ? 'bg-emerald-100 text-emerald-700'
+                      : 'bg-amber-100 text-amber-700'
+
+                return (
+                  <div
+                    key={delivery.id}
+                    className="rounded-lg border border-slate-200 p-5"
+                  >
+                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                      <div>
+                        <p className="text-sm font-medium text-slate-500">
+                          Delivery #{delivery.id}
+                        </p>
+                        <h4 className="mt-1 text-lg font-semibold text-slate-900">
+                          {delivery.customer_name}
+                        </h4>
+                        <p className="mt-1 text-sm text-slate-500">
+                          {delivery.item_description}
+                        </p>
+                      </div>
+                      <span
+                        className={`w-fit rounded-full px-3 py-1 text-xs font-medium ${badgeStyles}`}
+                      >
+                        {delivery.confirmed ? 'CONFIRMED' : delivery.status}
+                      </span>
+                    </div>
+
+                    <div className="mt-4 grid gap-3 border-t border-slate-100 pt-4 text-sm text-slate-600 md:grid-cols-3">
+                      <p>
+                        <span className="font-medium text-slate-500">
+                          Address:
+                        </span>{' '}
+                        {delivery.delivery_address}
                       </p>
-                      <h4 className="mt-1 text-lg font-semibold text-slate-900">
-                        {delivery.customer_name}
-                      </h4>
-                      <p className="mt-1 text-sm text-slate-500">
-                        {delivery.item_description}
+                      <p>
+                        <span className="font-medium text-slate-500">Rider:</span>{' '}
+                        {delivery.rider_name || 'Unassigned'}
+                      </p>
+                      <p>
+                        <span className="font-medium text-slate-500">
+                          QR code:
+                        </span>{' '}
+                        {delivery.confirmation_code}
                       </p>
                     </div>
-                    <span className="w-fit rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700">
-                      {delivery.confirmed ? 'CONFIRMED' : delivery.status}
-                    </span>
                   </div>
-
-                  <div className="mt-4 grid gap-3 border-t border-slate-100 pt-4 text-sm text-slate-600 md:grid-cols-3">
-                    <p>
-                      <span className="font-medium text-slate-500">Address:</span>{' '}
-                      {delivery.delivery_address}
-                    </p>
-                    <p>
-                      <span className="font-medium text-slate-500">Rider:</span>{' '}
-                      {delivery.rider_name || 'Unassigned'}
-                    </p>
-                    <p>
-                      <span className="font-medium text-slate-500">QR code:</span>{' '}
-                      {delivery.confirmation_code}
-                    </p>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>

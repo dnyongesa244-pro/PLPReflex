@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import DashboardLayout from '../../layouts/DashboardLayout'
 import {
   getPendingDeliveries,
@@ -22,8 +23,8 @@ function DispatcherDashboard() {
   const [error, setError] = useState('')
   const [assigningId, setAssigningId] = useState(null)
   const [message, setMessage] = useState('')
-  const [activeSection, setActiveSection] = useState('pending')
-  const [isSectionMenuOpen, setIsSectionMenuOpen] = useState(false)
+  const [searchParams] = useSearchParams()
+  const activeSection = searchParams.get('section') || 'pending'
 
   const loadData = async () => {
     try {
@@ -133,31 +134,6 @@ function DispatcherDashboard() {
     (delivery) => delivery.status === 'DELIVERED' || delivery.confirmed
   )
 
-  const sections = [
-    {
-      id: 'pending',
-      label: 'Pending Delivery Requests',
-      count: deliveries.length,
-    },
-    {
-      id: 'active',
-      label: 'Active Assignments',
-      count: activeAssignments.length,
-    },
-    {
-      id: 'completed',
-      label: 'Completed Assignments',
-      count: completedAssignments.length,
-    },
-  ]
-
-  const selectedSection = sections.find((section) => section.id === activeSection)
-
-  const selectSection = (sectionId) => {
-    setActiveSection(sectionId)
-    setIsSectionMenuOpen(false)
-  }
-
   const renderAssignmentList = (items, emptyMessage) => {
     if (loading) {
       return <p className="mt-6 text-sm text-slate-500">Loading assignments...</p>
@@ -220,69 +196,20 @@ function DispatcherDashboard() {
         )}
 
         <div className="relative md:hidden">
-          <button
-            type="button"
-            aria-expanded={isSectionMenuOpen}
-            onClick={() => setIsSectionMenuOpen((current) => !current)}
-            className="flex w-full items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 text-left shadow-sm"
-          >
-            <span>
-              <span className="block text-xs font-medium uppercase tracking-wide text-slate-400">
-                Dashboard section
-              </span>
-              <span className="mt-1 block text-sm font-semibold text-slate-900">
-                {selectedSection.label}
-              </span>
-            </span>
-            <span className="text-lg text-slate-500">{isSectionMenuOpen ? '−' : '+'}</span>
-          </button>
-
-          {isSectionMenuOpen && (
-            <div className="absolute z-10 mt-2 w-full rounded-xl border border-slate-200 bg-white p-2 shadow-lg">
-              {sections.map((section) => (
-                <button
-                  key={section.id}
-                  type="button"
-                  onClick={() => selectSection(section.id)}
-                  className={`flex w-full items-center justify-between rounded-lg px-3 py-3 text-left text-sm font-medium ${
-                    activeSection === section.id
-                      ? 'bg-slate-900 text-white'
-                      : 'text-slate-700 hover:bg-slate-100'
-                  }`}
-                >
-                  <span>{section.label}</span>
-                  <span>{section.count}</span>
-                </button>
-              ))}
-            </div>
-          )}
+          <span className="block text-xs font-medium uppercase tracking-wide text-slate-400">
+            Dashboard section
+          </span>
+          <span className="mt-1 block text-sm font-semibold text-slate-900">
+            {activeSection === 'pending' && 'Pending Delivery Requests'}
+            {activeSection === 'active' && 'Active Assignments'}
+            {activeSection === 'completed' && 'Completed Assignments'}
+          </span>
+          <p className="mt-1 text-xs text-slate-500">
+            Use the sidebar menu to switch sections.
+          </p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-[220px_minmax(0,1fr)] md:items-start">
-          <aside className="hidden rounded-xl border border-slate-200 bg-white p-3 shadow-sm md:block">
-            <p className="px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
-              Dispatcher dashboard
-            </p>
-            <nav className="space-y-1" aria-label="Dispatcher dashboard sections">
-              {sections.map((section) => (
-                <button
-                  key={section.id}
-                  type="button"
-                  onClick={() => selectSection(section.id)}
-                  className={`flex w-full items-center justify-between rounded-lg px-3 py-3 text-left text-sm font-medium transition ${
-                    activeSection === section.id
-                      ? 'bg-slate-900 text-white'
-                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-                  }`}
-                >
-                  <span>{section.label}</span>
-                  <span>{section.count}</span>
-                </button>
-              ))}
-            </nav>
-          </aside>
-
-          <div className="min-w-0">
+        <div className="min-w-0">
           {activeSection === 'pending' && <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -403,7 +330,6 @@ function DispatcherDashboard() {
             </div>
           )}
           </div>
-        </div>
       </div>
     </DashboardLayout>
   )

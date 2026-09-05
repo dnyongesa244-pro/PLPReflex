@@ -1,11 +1,25 @@
-import { NavLink } from 'react-router-dom'
-import ProfileMenu from './ProfileMenu'
+import { Link, useLocation } from 'react-router-dom'
 import { CloseIcon, DashboardIcon } from './icons'
 
 const roleNavigation = {
-  retailer: [{ label: 'Dashboard', path: '/retailer', icon: DashboardIcon }],
-  dispatcher: [{ label: 'Dashboard', path: '/dispatcher', icon: DashboardIcon }],
-  rider: [{ label: 'Dashboard', path: '/rider', icon: DashboardIcon }],
+  retailer: [
+    { label: 'Dashboard', path: '/retailer', search: '' },
+    { label: 'Pending', path: '/retailer', search: '?status=PENDING' },
+    { label: 'In Transit', path: '/retailer', search: '?status=IN_TRANSIT' },
+    { label: 'Completed', path: '/retailer', search: '?status=COMPLETED' },
+  ],
+  dispatcher: [
+    { label: 'Dashboard', path: '/dispatcher', search: '' },
+    { label: 'Pending Requests', path: '/dispatcher', search: '?section=pending' },
+    { label: 'Active Assignments', path: '/dispatcher', search: '?section=active' },
+    { label: 'Completed', path: '/dispatcher', search: '?section=completed' },
+  ],
+  rider: [
+    { label: 'Dashboard', path: '/rider', search: '' },
+    { label: 'Assigned', path: '/rider', search: '?status=ASSIGNED' },
+    { label: 'Picked Up', path: '/rider', search: '?status=PICKED_UP' },
+    { label: 'Delivered', path: '/rider', search: '?status=DELIVERED' },
+  ],
 }
 
 const roleLabels = {
@@ -16,6 +30,11 @@ const roleLabels = {
 
 function Sidebar({ role, isOpen, onClose }) {
   const navigation = roleNavigation[role] || []
+  const location = useLocation()
+
+  const isItemActive = (item) =>
+    location.pathname === item.path &&
+    (location.search || '') === (item.search || '')
 
   return (
     <>
@@ -54,28 +73,29 @@ function Sidebar({ role, isOpen, onClose }) {
         </div>
 
         <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-2">
-          {navigation.map(({ label, path, icon: Icon }) => (
-            <NavLink
-              key={path}
-              to={path}
-              end
-              className={({ isActive }) =>
-                `flex items-center gap-3 rounded-lg border-l-2 px-3 py-2.5 text-sm font-medium transition ${
-                  isActive
+          {navigation.map((item, index) => {
+            const active = isItemActive(item)
+            const isPrimary = index === 0
+
+            return (
+              <Link
+                key={`${item.path}${item.search}`}
+                to={`${item.path}${item.search}`}
+                aria-current={active ? 'page' : undefined}
+                className={`flex items-center gap-3 rounded-lg border-l-2 py-2.5 text-sm font-medium transition ${
+                  isPrimary ? 'px-3' : 'py-2 pl-9 pr-3'
+                } ${
+                  active
                     ? 'border-amber-500 bg-slate-800 text-white'
                     : 'border-transparent text-slate-400 hover:bg-slate-800/60 hover:text-white'
-                }`
-              }
-            >
-              {Icon && <Icon className="h-4 w-4 shrink-0" />}
-              {label}
-            </NavLink>
-          ))}
+                }`}
+              >
+                {isPrimary && <DashboardIcon className="h-4 w-4 shrink-0" />}
+                {item.label}
+              </Link>
+            )
+          })}
         </nav>
-
-        <div className="border-t border-slate-800 p-3">
-          <ProfileMenu />
-        </div>
       </aside>
     </>
   )

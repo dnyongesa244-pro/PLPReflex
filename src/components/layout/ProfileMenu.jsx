@@ -22,14 +22,16 @@ function ProfileMenu() {
   }
 
   return (
-    <div className="flex items-center gap-3 rounded-lg px-2 py-2">
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-500 text-sm font-semibold text-slate-900">
-        {initials}
+    <div className="flex shrink-0 items-center gap-3">
+      <div className="hidden text-right sm:block">
+        <p className="truncate text-sm font-medium text-slate-900">
+          {displayName}
+        </p>
+        <p className="truncate text-xs text-slate-500">{roleLabel}</p>
       </div>
 
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-white">{displayName}</p>
-        <p className="truncate text-xs text-slate-400">{roleLabel}</p>
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white">
+        {initials}
       </div>
 
       <button
@@ -37,7 +39,7 @@ function ProfileMenu() {
         onClick={handleLogout}
         aria-label="Log out"
         title="Log out"
-        className="shrink-0 rounded-lg p-2 text-slate-400 transition hover:bg-slate-800 hover:text-white"
+        className="shrink-0 rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900"
       >
         <LogoutIcon className="h-4 w-4" />
       </button>
